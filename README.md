@@ -1,6 +1,6 @@
 # Alpaca Scala
 
-A scala library that interfaces to [alpaca.markets](alpaca.markets)
+A scala library that interfaces to [alpaca.markets](https://alpaca.markets)
 
 ![Scala](https://img.shields.io/badge/scala-made--with-red.svg?logo=scala&style=for-the-badge)
 
