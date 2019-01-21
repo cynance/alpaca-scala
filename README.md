@@ -1,10 +1,10 @@
-#Alpaca Scala
+# Alpaca Scala
 
 A scala library that interfaces to [alpaca.markets](alpaca.markets)
 
 ![Scala](https://img.shields.io/badge/scala-made--with-red.svg?logo=scala&style=for-the-badge)
 
-##Setup
+## Setup
 
 The library requires configuration that consists of these 3 propereties
 * `accountKey` - The account key from the alpaca account.
@@ -23,7 +23,7 @@ alpaccaauth {
 ```
 * **Env Variables** - You can also pass in system environment variables and it will pick those up.
 
-##Usage
+## Usage
 
 Here is an example of getting account information from Alpaca.
 
@@ -36,7 +36,7 @@ val account : Future[Account] = alpaca.getAccount.unsafeToFuture()
 ```
 
 
-##Todo
+## Todo
 
 - [ ] Streaming API
 - [ ] Unit Test with API (Need another paper account key?)
