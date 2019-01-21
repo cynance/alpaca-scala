@@ -6,7 +6,7 @@ A scala library that interfaces to [alpaca.markets](https://alpaca.markets)
 
 ## Setup
 
-The library requires configuration that consists of these 3 propereties
+The library requires configuration that consists of these 3 properties
 * `accountKey` - The account key from the alpaca account.
 * `accountSecret` - The account secret from the alpaca account.
 * `isPaper` - Determines whether an account is a paper trading account.
