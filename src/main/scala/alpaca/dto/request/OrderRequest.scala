@@ -5,6 +5,6 @@ case class OrderRequest(symbol: String,
                         side: String,
                         `type`: String,
                         time_in_force: String,
-                        limit_price: String,
-                        stop_price: String,
-                        client_order_id: String)
+                        limit_price: Option[String] = None,
+                        stop_price: Option[String] = None,
+                        client_order_id: Option[String] = None)
