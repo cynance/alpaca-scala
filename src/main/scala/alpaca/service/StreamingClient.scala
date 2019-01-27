@@ -11,6 +11,7 @@ import akka.http.scaladsl.model.ws.{
 }
 import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult}
 import akka.stream.scaladsl.{Keep, Sink, Source, SourceQueueWithComplete}
+import alpaca.dto.streaming.StreamingMessage
 import alpaca.dto.streaming.request.{
   AuthenticationRequest,
   AuthenticationRequestData
@@ -46,9 +47,9 @@ class StreamingClient {
 
   private var authenticated: Boolean = false
 
-  def sub(list: List[String])
-    : Map[String,
-          (SourceQueueWithComplete[Message], Source[Message, NotUsed])] = {
+  def sub(list: List[String]): Map[String,
+                                   (SourceQueueWithComplete[StreamingMessage],
+                                    Source[StreamingMessage, NotUsed])] = {
     list.map {
       case subject
           if subject.startsWith("Q.") || subject.startsWith("T.") || subject
@@ -61,13 +62,14 @@ class StreamingClient {
 
   def subscribeAlpaca(subject: String) = {
     val source = Source
-      .queue[Message](bufferSize = 1000, OverflowStrategy.backpressure)
+      .queue[StreamingMessage](bufferSize = 1000, OverflowStrategy.backpressure)
       .preMaterialize()
 
     val incoming: Sink[WSMessage, Future[Done]] =
       Sink.foreach[WSMessage] {
         case message: BinaryMessage.Strict =>
-//          source._1.offer(message)
+          message.data.utf8String
+          source._1.offer(StreamingMessage(subject, message.data.utf8String))
       }
 
     if (!authenticated) {
@@ -97,14 +99,15 @@ class StreamingClient {
     source
   }
 
-  def subscribePolygon(subject: String)
-    : (SourceQueueWithComplete[Message], Source[Message, NotUsed]) = {
+  def subscribePolygon(
+      subject: String): (SourceQueueWithComplete[StreamingMessage],
+                         Source[StreamingMessage, NotUsed]) = {
     val source = Source
-      .queue[Message](bufferSize = 1000, OverflowStrategy.backpressure)
+      .queue[StreamingMessage](bufferSize = 1000, OverflowStrategy.backpressure)
       .preMaterialize()
     val sub = nats.subscribe(subject)
     val dispatcher = nats.createDispatcher(msg => {
-      source._1.offer(msg)
+      source._1.offer(StreamingMessage(msg.getSubject, new String(msg.getData)))
     })
     dispatcher.subscribe(sub.getSubject)
     source
