@@ -190,7 +190,7 @@ alpaca.getPositions.unsafeToFuture().onComplete {
 
 
 
-##Streaming Usage
+## Streaming Usage
 
 >Note : Streaming requires [akka-streams](https://doc.akka.io/docs/akka/2.5/stream/) for proper usage.
 
