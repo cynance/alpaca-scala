@@ -2,6 +2,25 @@ name := "alpaca-scala"
 
 version := "0.1"
 
+// POM settings for Sonatype
+organization := "com.github.oueasley"
+homepage := Some(url("https://github.com/OUEasley/alpaca-scala"))
+scmInfo := Some(ScmInfo(url("https://github.com/OUEasley/alpaca-scala"),"git@github.com:OUEasley/alpaca-scala.git"))
+developers := List(Developer("OUEasley",
+  "OUEasley",
+  "oueasley@gmail.com",
+  url("https://github.com/OUEasley")))
+licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
+publishMavenStyle := true
+
+// Add sonatype repository settings
+publishTo := Some(
+  if (isSnapshot.value)
+    Opts.resolver.sonatypeSnapshots
+  else
+    Opts.resolver.sonatypeStaging
+)
+
 scalaVersion := "2.12.8"
 
 val circeVersion = "0.10.0"

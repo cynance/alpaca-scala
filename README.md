@@ -6,6 +6,10 @@ A scala library that interfaces to [alpaca.markets](https://alpaca.markets)
 
 ## Setup
 
+Add the dependency:
+
+`libraryDependencies += "com.github.oueasley" %% "alpaca-scala" % "0.1"`
+
 The library requires configuration that consists of these 3 properties
 * `accountKey` - The account key from the alpaca account.
 * `accountSecret` - The account secret from the alpaca account.
@@ -192,6 +196,3 @@ alpaca.getPositions.unsafeToFuture().onComplete {
 
 ###
 
-## Todo
-
-- [ ] Streaming API
