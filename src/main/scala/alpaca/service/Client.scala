@@ -115,6 +115,10 @@ private[alpaca] class Client {
     execute[Orders, Unit](Method.GET, s"ConfigService.order_url/$orderId")
   }
 
+  def cancelOrder(orderId: String): Unit = {
+    execute[String, Unit](Method.DELETE, s"ConfigService.order_url/$orderId")
+  }
+
   def getOrders: IO[List[Orders]] = {
     execute[List[Orders], Unit](Method.GET, ConfigService.order_url)
   }

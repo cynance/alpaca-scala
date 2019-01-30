@@ -13,7 +13,8 @@ import scala.util.{Failure, Success}
 
 //Functional tests. Need a paper api key for these to work.
 class AlpacaTest extends FunSuite {
-
+  implicit val sys = ActorSystem()
+  implicit val mat = ActorMaterializer()
   test("Get account") {
     val alpaca = Alpaca()
     val account = alpaca.getAccount.unsafeToFuture()
@@ -28,6 +29,38 @@ class AlpacaTest extends FunSuite {
 
     Thread.sleep(5000)
 
+  }
+
+  test("Get trade updates") {
+    val alpaca = Alpaca()
+    val stream = alpaca.getStream().subscribeAlpaca("trade_updates")
+    stream._2.runWith(Sink.foreach(x => {
+      println(new String(x.data))
+      println(new String(x.subject))
+    }))
+    Thread.sleep(5000)
+
+    val order =
+      Await.result(
+        alpaca
+          .placeOrder(OrderRequest("GOOG", "1", "buy", "market", "day"))
+          .unsafeToFuture(),
+        10 seconds)
+
+    Thread.sleep(10000)
+  }
+
+  test("Stream -> get quote updates.") {
+    val alpaca = Alpaca()
+    val listOfQuotes = List("T.AAPL", "T.GOOG", "T.SNAP")
+    val stream = alpaca.getStream().sub(listOfQuotes)
+    stream.foreach(x => {
+      x._2._2.runWith(Sink.foreach(x => {
+        println(new String(x.data))
+        println(new String(x.subject))
+      }))
+    })
+    Thread.sleep(10000)
   }
 
   test("Get Assets") {
@@ -135,18 +168,17 @@ class AlpacaTest extends FunSuite {
   test("Test stream polygon") {
     val alpaca = Alpaca()
     val stream = alpaca.getStream()
-    implicit val sys = ActorSystem()
-    implicit val mat = ActorMaterializer()
+
     val str = stream
       .subscribePolygon("T.*")
 
     str._2
-      .runWith(Sink.foreach(x => println(new String(x.getData))))
+      .runWith(Sink.foreach(x => println(new String(x.data))))
     Thread.sleep(5000)
     str._1.complete()
     println("-----------------------------------------")
     str._2
-      .runWith(Sink.foreach(x => println(new String(x.getData))))
+      .runWith(Sink.foreach(x => println(new String(x.data))))
     Thread.sleep(5000)
   }
 

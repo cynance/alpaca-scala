@@ -7,14 +7,17 @@ import akka.http.scaladsl.model.ws.{
   BinaryMessage,
   TextMessage,
   WebSocketRequest,
+  WebSocketUpgradeResponse,
   Message => WSMessage
 }
 import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult}
-import akka.stream.scaladsl.{Keep, Sink, Source, SourceQueueWithComplete}
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source, SourceQueueWithComplete}
 import alpaca.dto.streaming.StreamingMessage
 import alpaca.dto.streaming.request.{
   AuthenticationRequest,
-  AuthenticationRequestData
+  AuthenticationRequestData,
+  StreamingData,
+  StreamingRequest
 }
 import io.nats.client._
 import io.circe._
@@ -42,7 +45,8 @@ class StreamingClient {
   val options: Options =
     new Options.Builder().servers(polygonServerURLs).build()
   val nats: Connection = Nats.connect(options)
-  val webSocketFlow =
+  val webSocketFlow
+    : Flow[WSMessage, WSMessage, Future[WebSocketUpgradeResponse]] =
     Http().webSocketClientFlow(WebSocketRequest(wsUrl))
 
   private var authenticated: Boolean = false
@@ -63,6 +67,7 @@ class StreamingClient {
   def subscribeAlpaca(subject: String) = {
     val source = Source
       .queue[StreamingMessage](bufferSize = 1000, OverflowStrategy.backpressure)
+      .log("error logging")
       .preMaterialize()
 
     val incoming: Sink[WSMessage, Future[Done]] =
@@ -72,30 +77,28 @@ class StreamingClient {
           source._1.offer(StreamingMessage(subject, message.data.utf8String))
       }
 
+    val clientSource = Source
+      .queue[WSMessage](bufferSize = 1000, OverflowStrategy.backpressure)
+      .via(Http().webSocketClientFlow(WebSocketRequest(wsUrl)))
+      .to(incoming)
+      .run()
+
     if (!authenticated) {
       val ar = AuthenticationRequest(
         data = AuthenticationRequestData(ConfigService.accountKey,
                                          ConfigService.accountSecret))
 
-      val source = Source
-        .queue[Message](bufferSize = 1000, OverflowStrategy.backpressure)
-        .preMaterialize()
-
-      val incomingAuth: Sink[WSMessage, Future[Done]] =
-        Sink.foreach[WSMessage] {
-          case message: BinaryMessage.Strict =>
-//            message.source._1.offer(message)
-        }
-
       val ars = ar.asJson.noSpaces
-      val outgoing = Source.single(TextMessage(ars))
-      outgoing
-        .viaMat(webSocketFlow)(Keep.right)
-        .toMat(incoming)(Keep.both)
-        .run()
-      authenticated = true
 
+      clientSource.offer(TextMessage(ars))
+      authenticated = true
+      Thread.sleep(5000)
     }
+    val subRequest = TextMessage(
+      StreamingRequest("listen", StreamingData(Array(subject))).asJson.noSpaces)
+
+    clientSource.offer(subRequest)
+
     source
   }
 

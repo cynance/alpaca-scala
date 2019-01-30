@@ -47,6 +47,10 @@ case class Alpaca(isPaper: Option[Boolean] = None,
     client.getClock
   }
 
+  def cancelOrder(orderId: String): Unit = {
+    client.cancelOrder(orderId)
+  }
+
   def getOrder(orderId: String): IO[Orders] = {
     client.getOrder(orderId)
   }
