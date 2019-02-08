@@ -1,6 +1,6 @@
 name := "alpaca-scala"
 
-version := "0.2"
+version := "0.3"
 
 // POM settings for Sonatype
 organization := "com.github.oueasley"
@@ -43,3 +43,29 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 )
+
+
+libraryDependencies += {
+  val version = scalaBinaryVersion.value match {
+    case "2.10" => "1.0.3"
+    case _ ⇒ "1.6.2"
+  }
+  "com.lihaoyi" % "ammonite" % version % "test" cross CrossVersion.full
+}
+
+sourceGenerators in Test += Def.task {
+  val file = (sourceManaged in Test).value / "amm.scala"
+  IO.write(file, """object amm extends App { ammonite.Main.main(args) }""")
+  Seq(file)
+}.taskValue
+
+// Optional, required for the `source` command to work
+(fullClasspath in Test) ++= {
+  (updateClassifiers in Test).value
+    .configurations
+    .find(_.configuration == Test.name)
+    .get
+    .modules
+    .flatMap(_.artifacts)
+    .collect{case (a, f) if a.classifier == Some("sources") => f}
+}

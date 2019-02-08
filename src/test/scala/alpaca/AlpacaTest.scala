@@ -1,9 +1,12 @@
 package alpaca
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Sink
+import akka.stream.scaladsl.{Sink, Source, SourceQueueWithComplete}
 import alpaca.dto.request.OrderRequest
+import alpaca.dto.streaming.StreamingMessage
+import alpaca.service.StreamingClient
 import org.scalatest.FunSuite
 
 import scala.concurrent.Await
@@ -167,9 +170,10 @@ class AlpacaTest extends FunSuite {
 
   test("Test stream polygon") {
     val alpaca = Alpaca()
-    val stream = alpaca.getStream()
+    val stream: StreamingClient = alpaca.getStream()
 
-    val str = stream
+    val str: (SourceQueueWithComplete[StreamingMessage],
+              Source[StreamingMessage, NotUsed]) = stream
       .subscribePolygon("T.*")
 
     str._2
@@ -188,9 +192,30 @@ class AlpacaTest extends FunSuite {
     implicit val sys = ActorSystem()
     implicit val mat = ActorMaterializer()
     val str = stream
-      .subscribeAlpaca("test")
+      .subscribeAlpaca("trade_updates")
     Thread.sleep(5000)
 
+  }
+
+  test("Polygon trade test") {
+    val alpaca = Alpaca()
+    alpaca.getHistoricalTrades("AAPL", "2018-2-2", None, Some(5))
+  }
+
+  test("Polygon hist trade test") {
+    val alpaca = Alpaca()
+    val ht =
+      alpaca.getHistoricalTradesAggregate("AAPL",
+                                          "minute",
+                                          Some("4-1-2018"),
+                                          Some("4-12-2018"),
+                                          Some(5))
+    ht.unsafeToFuture().onComplete {
+      case Failure(exception) =>
+        println("Could not get position." + exception.getMessage)
+      case Success(value) =>
+        println(s"${value}")
+    }
   }
 
 }

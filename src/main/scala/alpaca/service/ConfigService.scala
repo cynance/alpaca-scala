@@ -15,6 +15,9 @@ private[alpaca] object ConfigService {
   lazy val clock_url = s"$base_url/v1/clock"
   lazy val order_url = s"$base_url/v1/orders"
   lazy val positions_url = s"$base_url/v1/positions"
+
+  lazy val basePolygonUrl = "https://api.polygon.io"
+
   var accountKey = ""
   var accountSecret = ""
 

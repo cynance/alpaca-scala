@@ -2,8 +2,9 @@ package alpaca
 
 import alpaca.dto._
 import alpaca.dto.algrebra.Bars
+import alpaca.dto.polygon.{HistoricalAggregates, Trade}
 import alpaca.dto.request.OrderRequest
-import alpaca.service.{Client, ConfigService, StreamingClient}
+import alpaca.service.{Client, ConfigService, PolygonClient, StreamingClient}
 import cats.effect.IO
 
 case class Alpaca(isPaper: Option[Boolean] = None,
@@ -13,7 +14,17 @@ case class Alpaca(isPaper: Option[Boolean] = None,
   ConfigService.loadConfig(isPaper, accountKey, accountSecret)
 
   val client = new Client()
-  val streamingClient = new StreamingClient
+  val streamingClient: StreamingClient =
+    try {
+      new StreamingClient
+    } catch {
+      case e: Exception => {
+        println("No streaming client avaible.")
+        null
+      }
+    }
+
+  val polygonClient = new PolygonClient
 
   def getAccount: IO[Account] = {
     client.getAccount
@@ -71,6 +82,30 @@ case class Alpaca(isPaper: Option[Boolean] = None,
     client.getPosition(symbol)
   }
 
+  //Polygon Client
+  def getHistoricalTrades(symbol: String,
+                          date: String,
+                          offset: Option[Long] = None,
+                          limit: Option[Int] = None): IO[Trade] = {
+    polygonClient.getHistoricalTrades(symbol, date, offset, limit)
+  }
+
+  def getHistoricalTradesAggregate(
+      symbol: String,
+      size: String,
+      from: Option[String] = None,
+      to: Option[String] = None,
+      limit: Option[Int] = None,
+      unadjusted: Option[Boolean] = None): IO[HistoricalAggregates] = {
+    polygonClient.getHistoricalTradesAggregate(symbol,
+                                               size,
+                                               from,
+                                               to,
+                                               limit,
+                                               unadjusted)
+  }
+
+  //Streaming client
   def getStream() = {
     streamingClient
   }
