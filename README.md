@@ -8,7 +8,7 @@ A scala library that interfaces to [alpaca.markets](https://alpaca.markets)
 
 Add the dependency:
 
-`libraryDependencies += "com.github.oueasley" %% "alpaca-scala" % "0.1"`
+`libraryDependencies += "com.github.oueasley" %% "alpaca-scala" % "0.3"`
 
 The library requires configuration that consists of these 3 properties
 * `accountKey` - The account key from the alpaca account.
