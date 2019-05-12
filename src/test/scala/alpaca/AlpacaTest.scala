@@ -13,16 +13,21 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.util.{Failure, Success}
+import com.typesafe.scalalogging.Logger
 
 //Functional tests. Need a paper api key for these to work.
 class AlpacaTest extends FunSuite {
   implicit val sys = ActorSystem()
   implicit val mat = ActorMaterializer()
+  val logger = Logger(classOf[AlpacaTest])
+
   test("Get account") {
     val alpaca = Alpaca()
+
     val account = alpaca.getAccount.unsafeToFuture()
     account.onComplete {
-      case Failure(exception) => println("Could not get account information")
+      case Failure(exception) =>
+        logger.error("Could not get account", exception)
       case Success(value) =>
         if (value.account_blocked) {
           println("Account is currently restricted from trading.")
@@ -71,7 +76,8 @@ class AlpacaTest extends FunSuite {
 
     val activeAssets = alpaca.getAssets(Some("active")).unsafeToFuture()
     activeAssets.onComplete {
-      case Failure(exception) => println("Could not retrieve assets.")
+      case Failure(exception) =>
+        logger.error("Could not retrieve assets.", exception)
       case Success(values) =>
         values
           .filter(asset => asset.exchange.equalsIgnoreCase("NASDAQ"))

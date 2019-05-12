@@ -1,6 +1,6 @@
 name := "alpaca-scala"
 
-version := "0.3"
+version := "2.0.0"
 
 // POM settings for Sonatype
 organization := "com.github.oueasley"
