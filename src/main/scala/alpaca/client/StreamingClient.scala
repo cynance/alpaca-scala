@@ -1,6 +1,5 @@
-package alpaca.service
+package alpaca.client
 
-import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{
@@ -10,8 +9,9 @@ import akka.http.scaladsl.model.ws.{
   WebSocketUpgradeResponse,
   Message => WSMessage
 }
-import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult}
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source, SourceQueueWithComplete}
+import akka.stream.scaladsl.{Flow, Sink, Source, SourceQueueWithComplete}
+import akka.stream.{ActorMaterializer, OverflowStrategy}
+import akka.{Done, NotUsed}
 import alpaca.dto.streaming.StreamingMessage
 import alpaca.dto.streaming.request.{
   AuthenticationRequest,
@@ -19,20 +19,20 @@ import alpaca.dto.streaming.request.{
   StreamingData,
   StreamingRequest
 }
-import io.nats.client._
-import io.circe._
+import alpaca.service.ConfigService
 import io.circe.generic.auto._
-import io.circe.parser._
 import io.circe.syntax._
+import io.nats.client._
 
-import scala.collection.immutable
 import scala.concurrent.Future
 
-class StreamingClient {
+class StreamingClient(configService: ConfigService,
+                      polygonStreamingClient: PolygonStreamingClient,
+                      alpacaStreamingClient: AlpacaStreamingClient) {
 
-  val apiKey: String = ConfigService.accountKey
+  val apiKey: String = configService.getConfig.value.accountKey
   val wsUrl: String =
-    ConfigService.base_url
+    configService.getConfig.value.base_url
       .replace("https", "wss")
       .replace("http", "wss") + "/stream"
   val polygonServerURLs = Array(s"nats://${apiKey}@nats1.polygon.io:31101",
@@ -59,9 +59,10 @@ class StreamingClient {
           if subject.startsWith("Q.") || subject.startsWith("T.") || subject
             .startsWith("A.") || subject
             .startsWith("AM") =>
-        (subject, subscribePolygon(subject))
+        (subject, polygonStreamingClient.subscribe(subject))
       case x => (x, subscribeAlpaca(x))
     }.toMap
+    null
   }
 
   def subscribeAlpaca(subject: String) = {
@@ -85,8 +86,9 @@ class StreamingClient {
 
     if (!authenticated) {
       val ar = AuthenticationRequest(
-        data = AuthenticationRequestData(ConfigService.accountKey,
-                                         ConfigService.accountSecret))
+        data = AuthenticationRequestData(
+          configService.getConfig.value.accountKey,
+          configService.getConfig.value.accountSecret))
 
       val ars = ar.asJson.noSpaces
 
@@ -102,7 +104,7 @@ class StreamingClient {
     source
   }
 
-  def subscribePolygon(
+  def subscribePolygonNats(
       subject: String): (SourceQueueWithComplete[StreamingMessage],
                          Source[StreamingMessage, NotUsed]) = {
     val source = Source

@@ -1,22 +1,17 @@
-package alpaca.service
+package alpaca.client
 
 import alpaca.dto.polygon.{HistoricalAggregates, Trade}
+import alpaca.service.ConfigService
 import cats.effect.IO
-import hammock.{Hammock, Method, UriInterpolator}
-import cats._
-import cats.implicits._
-import cats.syntax.list._
-import cats.data.NonEmptyList
-import cats.effect.IO
-import hammock._
 import hammock.circe.implicits._
 import hammock.jvm.Interpreter
 import hammock.marshalling._
+import hammock.{Hammock, Method, UriInterpolator, _}
 import io.circe.generic.auto._
 
 import scala.collection.mutable.ListBuffer
 
-class PolygonClient {
+class PolygonClient(configService: ConfigService) {
   private implicit val interpreter: Interpreter[IO] = Interpreter[IO]
 
   def getHistoricalTrades(symbol: String,
@@ -24,7 +19,8 @@ class PolygonClient {
                           offset: Option[Long] = None,
                           limit: Option[Int] = None): IO[Trade] = {
     var queryParams = new ListBuffer[(String, String)]()
-    queryParams += Tuple2.apply("apiKey", ConfigService.accountKey)
+    queryParams += Tuple2.apply("apiKey",
+                                configService.getConfig.value.accountKey)
     if (offset.isDefined) {
       queryParams += Tuple2.apply("offet", offset.get.toString)
     }
@@ -41,7 +37,7 @@ class PolygonClient {
 
     execute[Trade, Unit](
       Method.GET,
-      s"${ConfigService.basePolygonUrl}/v1/historic/trades/$symbol/$date",
+      s"${configService.getConfig.value.basePolygonUrl}/v1/historic/trades/$symbol/$date",
       None,
       params)
   }
@@ -54,7 +50,8 @@ class PolygonClient {
       limit: Option[Int] = None,
       unadjusted: Option[Boolean] = None): IO[HistoricalAggregates] = {
     var queryParams = new ListBuffer[(String, String)]()
-    queryParams += Tuple2.apply("apiKey", ConfigService.accountKey)
+    queryParams += Tuple2.apply("apiKey",
+                                configService.getConfig.value.accountKey)
 
     if (from.isDefined) {
       queryParams += Tuple2.apply("from", from.get)
@@ -76,7 +73,7 @@ class PolygonClient {
 
     execute[HistoricalAggregates, Unit](
       Method.GET,
-      s"${ConfigService.basePolygonUrl}/v1/historic/agg/$size/$symbol",
+      s"${configService.getConfig.value.basePolygonUrl}/v1/historic/agg/$size/$symbol",
       None,
       params)
   }
@@ -91,11 +88,14 @@ class PolygonClient {
     val trueUrl = buildURI(url, queryParams)
 
     Hammock
-      .request(method,
-               trueUrl,
-               Map("APCA-API-KEY-ID" -> ConfigService.accountKey,
-                   "APCA-API-SECRET-KEY" -> ConfigService.accountSecret),
-               body) // In the `request` method, you describe your HTTP request
+      .request(
+        method,
+        trueUrl,
+        Map(
+          "APCA-API-KEY-ID" -> configService.getConfig.value.accountKey,
+          "APCA-API-SECRET-KEY" -> configService.getConfig.value.accountSecret),
+        body
+      ) // In the `request` method, you describe your HTTP request
       .as[A]
       .exec[IO]
   }

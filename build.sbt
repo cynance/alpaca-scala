@@ -41,7 +41,13 @@ libraryDependencies ++= Seq(
   "io.nats" % "jnats" % "2.2.0",
   "org.typelevel" %% "cats-core" % "1.5.0",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
+  "com.softwaremill.macwire" %% "macros" % "2.3.3" % "provided",
+  "com.softwaremill.macwire" %% "macrosakka" % "2.3.3" % "provided",
+  "com.softwaremill.macwire" %% "util" % "2.3.3",
+  "com.softwaremill.macwire" %% "proxy" % "2.3.3",
+  "com.beachape" %% "enumeratum" % "1.5.13",
+  "com.beachape" %% "enumeratum-circe" % "1.5.21",
 )
 
 

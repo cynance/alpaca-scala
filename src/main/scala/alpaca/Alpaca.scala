@@ -1,42 +1,32 @@
 package alpaca
 
+import alpaca.client.{AlpacaClient, PolygonClient, StreamingClient}
 import alpaca.dto._
 import alpaca.dto.algrebra.Bars
 import alpaca.dto.polygon.{HistoricalAggregates, Trade}
 import alpaca.dto.request.OrderRequest
-import alpaca.service.{Client, ConfigService, PolygonClient, StreamingClient}
+import alpaca.modules.MainModule
+import alpaca.service.ConfigService
 import cats.effect.IO
 
 case class Alpaca(isPaper: Option[Boolean] = None,
                   accountKey: Option[String] = None,
-                  accountSecret: Option[String] = None) {
+                  accountSecret: Option[String] = None)
+    extends MainModule {
 
-  ConfigService.loadConfig(isPaper, accountKey, accountSecret)
-
-  val client = new Client()
-  val streamingClient: StreamingClient =
-    try {
-      new StreamingClient
-    } catch {
-      case e: Exception => {
-        println("No streaming client avaible.")
-        null
-      }
-    }
-
-  val polygonClient = new PolygonClient
+  configService.loadConfig(isPaper, accountKey, accountSecret)
 
   def getAccount: IO[Account] = {
-    client.getAccount
+    alpacaClient.getAccount
   }
 
   def getAssets(status: Option[String] = None,
                 asset_class: Option[String] = None): IO[List[Assets]] = {
-    client.getAssets(status, asset_class)
+    alpacaClient.getAssets(status, asset_class)
   }
 
   def getAsset(symbol: String): IO[Assets] = {
-    client.getAsset(symbol)
+    alpacaClient.getAsset(symbol)
   }
 
   def getBars(timeframe: String,
@@ -46,40 +36,40 @@ case class Alpaca(isPaper: Option[Boolean] = None,
               end: Option[String] = None,
               after: Option[String] = None,
               until: Option[String] = None): IO[Bars] = {
-    client.getBars(timeframe, symbols, limit, start, end, after, until)
+    alpacaClient.getBars(timeframe, symbols, limit, start, end, after, until)
   }
 
   def getCalendar(start: Option[String] = None,
                   end: Option[String] = None): IO[List[Calendar]] = {
-    client.getCalendar(start, end)
+    alpacaClient.getCalendar(start, end)
   }
 
   def getClock: IO[Clock] = {
-    client.getClock
+    alpacaClient.getClock
   }
 
   def cancelOrder(orderId: String): Unit = {
-    client.cancelOrder(orderId)
+    alpacaClient.cancelOrder(orderId)
   }
 
   def getOrder(orderId: String): IO[Orders] = {
-    client.getOrder(orderId)
+    alpacaClient.getOrder(orderId)
   }
 
   def getOrders: IO[List[Orders]] = {
-    client.getOrders
+    alpacaClient.getOrders
   }
 
   def placeOrder(orderRequest: OrderRequest): IO[Orders] = {
-    client.placeOrder(orderRequest)
+    alpacaClient.placeOrder(orderRequest)
   }
 
   def getPositions: IO[List[Position]] = {
-    client.getPositions
+    alpacaClient.getPositions
   }
 
   def getPosition(symbol: String): IO[Position] = {
-    client.getPosition(symbol)
+    alpacaClient.getPosition(symbol)
   }
 
   //Polygon Client
@@ -106,7 +96,7 @@ case class Alpaca(isPaper: Option[Boolean] = None,
   }
 
   //Streaming client
-  def getStream() = {
+  def getStream(): StreamingClient = {
     streamingClient
   }
 }
