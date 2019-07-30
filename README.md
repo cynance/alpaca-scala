@@ -4,6 +4,11 @@ A scala library that interfaces to [alpaca.markets](https://alpaca.markets)
 
 ![Scala](https://img.shields.io/badge/scala-made--red.svg?logo=scala&style=for-the-badge)
 
+
+[![Build Status](https://travis-ci.org/OUeasley/alpaca-scala.svg?branch=master)](https://travis-ci.org/OUeasley/alpaca-scala) [![Coverage Status](https://coveralls.io/repos/github/OUeasley/alpaca-scala/badge.svg?branch=master)](https://coveralls.io/github/OUeasley/alpaca-scala?branch=master)
+
+
+
 ## Setup
 
 Add the dependency:
@@ -16,7 +21,7 @@ The library requires configuration that consists of these 3 properties
 * `isPaper` - Determines whether an account is a paper trading account.
 
 The order the configuration properties are read are :
- * **Class Instantiation** - When the `Alpacca` class is instantiated, it can have the arguments of `accountKey`, `accountSecret` and `isPaper`.
+ * **Class Instantiation** - When the `Alpaca` class is instantiated, it can have the arguments of `accountKey`, `accountSecret` and `isPaper`.
  * **Config File** - This library will automatically pick up from an `application.conf` for example:
  ```yaml
 alpaccaauth {

@@ -12,13 +12,15 @@ import alpaca.service.{ConfigService, HammockService}
 trait MainModule {
   import com.softwaremill.macwire._
   //Services
-  lazy val configService = wire[ConfigService]
-  lazy val hammockService = wire[HammockService]
+  lazy val configService: ConfigService = wire[ConfigService]
+  lazy val hammockService: HammockService = wire[HammockService]
 
   //Clients
-  lazy val polygonClient = wire[PolygonClient]
-  lazy val alpacaClient = wire[AlpacaClient]
-  lazy val alpacaStreamingClient = wire[AlpacaStreamingClient]
-  lazy val polygonStreamingClient = wire[PolygonStreamingClient]
-  lazy val streamingClient = wire[StreamingClient]
+  lazy val polygonClient: PolygonClient = wire[PolygonClient]
+  lazy val alpacaClient: AlpacaClient = wire[AlpacaClient]
+  lazy val alpacaStreamingClient: AlpacaStreamingClient =
+    wire[AlpacaStreamingClient]
+  lazy val polygonStreamingClient: PolygonStreamingClient =
+    wire[PolygonStreamingClient]
+  lazy val streamingClient: StreamingClient = wire[StreamingClient]
 }

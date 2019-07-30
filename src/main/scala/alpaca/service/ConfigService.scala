@@ -9,50 +9,25 @@ import com.typesafe.scalalogging.Logger
 private[alpaca] class ConfigService {
   val logger = Logger(classOf[ConfigService])
 
-  var getConfig: Eval[Config] =
-    Eval.later {
-      loadConfig() match {
-        case Some(value) => value
-        case None        => Config("", "", isPaper = true)
-      }
-    }.memoize
+  var getConfig: Eval[Config] = _
 
   def loadConfig(isPaper: Option[Boolean] = None,
                  accountKey: Option[String] = None,
-                 accountSecret: Option[String] = None): Option[Config] = {
+                 accountSecret: Option[String] = None): Eval[Config] = {
     val alpacaAccountConfig = for {
       accountKey <- accountKey
       accountSecret <- accountSecret
       paperAccount <- isPaper
     } yield Config(accountKey, accountSecret, paperAccount)
 
-    val alpacaAccountWithFileCheck = alpacaAccountConfig match {
-      case Some(value) =>
-        logger.debug("Using passed in value")
-        value.some
-      case None =>
-        logger.debug("No value passed in explicitly...looking for config file.")
-        loadConfigFromFile()
-    }
-
-    val finalAlpacaConfig = alpacaAccountWithFileCheck match {
-      case Some(value) =>
-        logger.debug("Using passed in value")
-        value.some
-      case None =>
-        logger.debug(
-          "No value passed in explicitly...looking for env variables.")
-        loadConfigFromEnv()
-    }
-
     getConfig = Eval.now {
-      finalAlpacaConfig match {
-        case Some(value) => value
-        case None        => Config("", "", isPaper = true)
-      }
-    }.memoize
+      alpacaAccountConfig
+        .orElse(loadConfigFromFile())
+        .orElse(loadConfigFromEnv())
+        .getOrElse(Config("", "", isPaper = true))
+    }
 
-    finalAlpacaConfig
+    getConfig
   }
 
   private def loadConfigFromFile() = {

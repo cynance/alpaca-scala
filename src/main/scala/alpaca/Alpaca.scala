@@ -2,7 +2,7 @@ package alpaca
 
 import alpaca.client.{AlpacaClient, PolygonClient, StreamingClient}
 import alpaca.dto._
-import alpaca.dto.algrebra.Bars
+import alpaca.dto.algebra.Bars
 import alpaca.dto.polygon.{HistoricalAggregates, Trade}
 import alpaca.dto.request.OrderRequest
 import alpaca.modules.MainModule
@@ -72,7 +72,6 @@ case class Alpaca(isPaper: Option[Boolean] = None,
     alpacaClient.getPosition(symbol)
   }
 
-  //Polygon Client
   def getHistoricalTrades(symbol: String,
                           date: String,
                           offset: Option[Long] = None,
@@ -95,8 +94,7 @@ case class Alpaca(isPaper: Option[Boolean] = None,
                                                unadjusted)
   }
 
-  //Streaming client
-  def getStream(): StreamingClient = {
+  def getStream: StreamingClient = {
     streamingClient
   }
 }

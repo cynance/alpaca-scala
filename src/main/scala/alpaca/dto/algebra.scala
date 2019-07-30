@@ -4,6 +4,6 @@ import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder}
 import io.circe.generic.auto._
 import io.circe.syntax._
 
-object algrebra {
+object algebra {
   type Bars = Map[String, List[OHLC]]
 }

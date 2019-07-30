@@ -48,6 +48,7 @@ libraryDependencies ++= Seq(
   "com.softwaremill.macwire" %% "proxy" % "2.3.3",
   "com.beachape" %% "enumeratum" % "1.5.13",
   "com.beachape" %% "enumeratum-circe" % "1.5.21",
+  "org.mockito" %% "mockito-scala-scalatest" % "1.5.12"
 )
 
 
@@ -65,13 +66,6 @@ sourceGenerators in Test += Def.task {
   Seq(file)
 }.taskValue
 
-// Optional, required for the `source` command to work
-(fullClasspath in Test) ++= {
-  (updateClassifiers in Test).value
-    .configurations
-    .find(_.configuration == Test.name)
-    .get
-    .modules
-    .flatMap(_.artifacts)
-    .collect{case (a, f) if a.classifier == Some("sources") => f}
-}
+coverageExcludedPackages := ".*ConfigService.*;.*Config.*;alpaca\\.client\\..*"
+
+coverageEnabled := true
