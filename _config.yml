@@ -1,0 +1,11 @@
+name: Alpaca Scala
+baseurl: /alpaca-scala
+description: A Scala library for alpaca.markets
+highlighter: rouge
+docs: true
+collections:
+  tut:
+    output: true
+version: 3.0.0
+org: com.cynance
+markdown: kramdown

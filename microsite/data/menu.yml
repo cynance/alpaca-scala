@@ -1,0 +1,30 @@
+options:
+  - title: Getting Started
+    url: docs/index.html
+
+  - title: Account
+    url: docs/account.html
+
+  - title: Orders
+    url: docs/orders.html
+
+  - title: Positions
+    url: docs/positions.html
+
+  - title: Assets
+    url: docs/assets.html
+
+  - title: Calendar
+    url: docs/calendar.html
+
+  - title: Clock
+    url: docs/clock.html
+
+  - title: Streaming
+    url: docs/streaming.html
+
+  - title: Market Data
+    url: docs/market-data.html
+
+  - title: Polygon
+    url: docs/polygon.html
