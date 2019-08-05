@@ -12,7 +12,7 @@ import akka.http.scaladsl.model.ws.{
 import akka.stream.scaladsl.{Flow, Sink, Source, SourceQueueWithComplete}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.{Done, NotUsed}
-import alpaca.dto.streaming.{StreamingMessage}
+import alpaca.dto.streaming.{StreamMessage, StreamingMessage}
 import alpaca.dto.streaming.Polygon._
 import alpaca.dto.streaming.request.{
   AuthenticationRequest,
@@ -20,7 +20,7 @@ import alpaca.dto.streaming.request.{
   StreamingData,
   StreamingRequest
 }
-import alpaca.service.ConfigService
+import alpaca.service.{ConfigService, StreamingService}
 import com.typesafe.scalalogging.Logger
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -30,91 +30,71 @@ import io.nats.client._
 import cats._
 import cats.implicits._
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
+import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class PolygonStreamingClient(configService: ConfigService) {
+class PolygonStreamingClient(configService: ConfigService,
+                             streamingService: StreamingService)
+    extends BaseStreamingClient {
 
-  implicit val system: ActorSystem = ActorSystem()
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
   val logger = Logger(classOf[PolygonStreamingClient])
-
-  private var authenticated: Boolean = false
-
-  private val wsUrl = "wss://alpaca.socket.polygon.io/stocks"
-
-  private def decodePolygonMessage(
-      json: Json,
-      polygonStreamBasicMessage: PolygonStreamBasicMessage)
-    : Either[DecodingFailure, List[PolygonStreamMessage]] = {
-    polygonStreamBasicMessage.ev match {
-      case Ev.T      => json.as[List[PolygonStreamTradeMessage]]
-      case Ev.Q      => json.as[List[PolygonStreamQuoteMessage]]
-      case Ev.A      => json.as[List[PolygonStreamAggregatePerSecond]]
-      case Ev.AM     => json.as[List[PolygonStreamAggregatePerMinute]]
-      case Ev.status => json.as[List[PolygonStreamAuthenticationMessage]]
-    }
-
-  }
-
-  val source: (SourceQueueWithComplete[StreamingMessage],
-               Source[StreamingMessage, NotUsed]) = Source
-    .queue[StreamingMessage](bufferSize = 1000, OverflowStrategy.backpressure)
-    .log("error logging")
-    .preMaterialize()
 
   val incoming: Sink[WSMessage, Future[Done]] =
     Sink.foreach[WSMessage] {
       case message: TextMessage.Strict =>
-        val decodedMessage = for {
+        for {
           parsedJson <- parse(message.text)
           polygonStreamMessage <- parsedJson
             .as[List[PolygonStreamBasicMessage]]
-          decodeBasicMessage <- decodePolygonMessage(parsedJson,
-                                                     polygonStreamMessage.head)
+          decodeBasicMessage <- streamingService.decodePolygonMessage(
+            parsedJson,
+            polygonStreamMessage.head)
+          _ <- checkAuthentication(decodeBasicMessage)
+          _ <- offerMessage(decodeBasicMessage)
         } yield decodeBasicMessage
-
-        if (!authenticated) {
-          decodedMessage.map(msg => {
-            msg.head match {
-              case polygonStreamAuthenticationMessage: PolygonStreamAuthenticationMessage =>
-                if (polygonStreamAuthenticationMessage.status.equalsIgnoreCase(
-                      "authenticated")) {
-                  authenticated = true
-
-                }
-              case _ =>
-            }
-          })
-        }
-
-        source._1.offer(StreamingMessage("", message.text))
-
     }
 
-  val clientSource: SourceQueueWithComplete[WSMessage] = Source
-    .queue[WSMessage](bufferSize = 1000, OverflowStrategy.backpressure)
-    .via(Http().webSocketClientFlow(WebSocketRequest(wsUrl)))
-    .to(incoming)
-    .run()
+  val clientSource: SourceQueueWithComplete[WSMessage] =
+    streamingService.createClientSource(wsUrl, incoming)
 
-  def subscribe(subject: String): (SourceQueueWithComplete[StreamingMessage],
-                                   Source[StreamingMessage, NotUsed]) = {
+  authPromise.future.onComplete {
+    case Failure(exception) =>
+      logger.error(exception.toString)
+    case Success(value) =>
+      messageList.foreach(msg => {
+        logger.debug(msg.toString)
+        clientSource.offer(TextMessage(msg.asJson.noSpaces))
+      })
+  }
 
-    if (!authenticated) {
-      val ar = PolygonClientStreamMessage(
-        "auth",
-        configService.getConfig.value.accountKey)
-
-      val ars = ar.asJson.noSpaces
-
-      clientSource.offer(TextMessage(ars))
-      authenticated = true
-      Thread.sleep(5000)
+  private def checkAuthentication(message: List[PolygonStreamMessage])
+    : Either[String, List[PolygonStreamMessage]] = {
+    if (!authPromise.isCompleted) {
+      message.head match {
+        case polygonStreamAuthenticationMessage: PolygonStreamAuthenticationMessage =>
+          if (polygonStreamAuthenticationMessage.status.equalsIgnoreCase(
+                "auth_success")) {
+            authPromise.completeWith(Future.successful(true))
+          }
+        case _ =>
+      }
     }
-    val subRequest = TextMessage(
-      PolygonClientStreamMessage("subscribe", subject).asJson.noSpaces)
+    message.asRight
+  }
 
-    clientSource.offer(subRequest)
+  def subscribe(
+      subject: PolygonClientStreamMessage): (SourceQueueWithComplete[
+                                               StreamMessage],
+                                             Source[StreamMessage, NotUsed]) = {
+
+    if (authPromise.isCompleted) {
+      clientSource.offer(TextMessage(subject.asJson.noSpaces))
+    } else {
+      clientSource.offer(TextMessage(PolygonAuthMessage(
+        configService.getConfig.value.accountKey).asJson.noSpaces))
+      messageList += subject
+    }
 
     source
   }

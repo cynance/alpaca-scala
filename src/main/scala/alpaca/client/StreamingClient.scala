@@ -12,7 +12,13 @@ import akka.http.scaladsl.model.ws.{
 import akka.stream.scaladsl.{Flow, Sink, Source, SourceQueueWithComplete}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.{Done, NotUsed}
-import alpaca.dto.streaming.StreamingMessage
+import alpaca.dto.streaming.Polygon.PolygonAuthMessage
+import alpaca.dto.streaming.{
+  Alpaca,
+  ClientStreamMessage,
+  Polygon,
+  StreamingMessage
+}
 import alpaca.dto.streaming.request.{
   AuthenticationRequest,
   AuthenticationRequestData,
@@ -29,17 +35,19 @@ import scala.concurrent.Future
 class StreamingClient(polygonStreamingClient: PolygonStreamingClient,
                       alpacaStreamingClient: AlpacaStreamingClient) {
 
+  def subscribe(list: ClientStreamMessage*) = {
+    list.map {
+      case message: Polygon.PolygonClientStreamMessage =>
+        polygonStreamingClient.subscribe(message)
+      case message: Alpaca.AlpacaClientStreamMessage =>
+        alpacaStreamingClient.subscribe(message)
+    }
+  }
+
   def sub(list: List[String]): Map[String,
                                    (SourceQueueWithComplete[StreamingMessage],
                                     Source[StreamingMessage, NotUsed])] = {
-    list.map {
-      case subject
-          if subject.startsWith("Q.") || subject.startsWith("T.") || subject
-            .startsWith("A.") || subject
-            .startsWith("AM.") =>
-        (subject, polygonStreamingClient.subscribe(subject))
-      case x => (x, alpacaStreamingClient.subscribe(x))
-    }.toMap
-  }
+    null
 
+  }
 }

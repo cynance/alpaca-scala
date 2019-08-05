@@ -8,6 +8,8 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite, WordSpec}
 import cats._
 import cats.implicits._
 
+import scala.util.Failure
+
 class AlpacaTest extends WordSpec with BeforeAndAfterEach with MockitoSugar {
 
   trait fakeMainModule extends MainModule {
@@ -37,6 +39,7 @@ class AlpacaTest extends WordSpec with BeforeAndAfterEach with MockitoSugar {
         val symbol = "AAPL".some
         val assetClass = "blah".some
         alpaca.getAssets(symbol, assetClass)
+        alpaca.getAsset("blah")
         verify(alpaca.alpacaClient).getAssets(symbol, assetClass)
       }
     }

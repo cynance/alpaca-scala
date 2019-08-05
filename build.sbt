@@ -3,15 +3,17 @@ name := "alpaca-scala"
 version := "2.0.0"
 
 // POM settings for Sonatype
-organization := "com.github.oueasley"
-homepage := Some(url("https://github.com/OUEasley/alpaca-scala"))
-scmInfo := Some(ScmInfo(url("https://github.com/OUEasley/alpaca-scala"),"git@github.com:OUEasley/alpaca-scala.git"))
+organization := "com.cynance"
+homepage := Some(url("https://github.com/cynance/alpaca-scala"))
+scmInfo := Some(ScmInfo(url("https://github.com/cynance/alpaca-scala"),"git@github.com:cynance/alpaca-scala.git"))
 developers := List(Developer("OUEasley",
   "OUEasley",
   "oueasley@gmail.com",
   url("https://github.com/OUEasley")))
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 publishMavenStyle := true
+
+enablePlugins(MicrositesPlugin)
 
 // Add sonatype repository settings
 publishTo := Some(
@@ -69,3 +71,28 @@ sourceGenerators in Test += Def.task {
 coverageExcludedPackages := ".*ConfigService.*;.*Config.*;alpaca\\.client\\..*"
 
 coverageEnabled := true
+
+
+//Microsite details
+micrositeName := "Alpaca Scala"
+micrositeDescription := "A Scala library for alpaca.markets"
+micrositeAuthor := "OUEasley"
+micrositeBaseUrl := "/alpaca-scala"
+micrositeDocumentationUrl := "/alpaca-scala/docs"
+
+micrositePalette := Map(
+  "brand-primary"     -> "#000",
+  "brand-secondary"   -> "#000",
+  "brand-tertiary"    -> "#fcd600",
+  "gray-dark"         -> "#453E46",
+  "gray"              -> "#837F84",
+  "gray-light"        -> "#E3E2E3",
+  "gray-lighter"      -> "#F4F3F4",
+  "white-color"       -> "#FFFFFF")
+
+micrositePushSiteWith := GitHub4s
+
+micrositeGithubToken := sys.env.get("GITHUB_TOKEN")
+
+micrositeGithubOwner := "cynance"
+micrositeGithubRepo := "alpaca-scala"
