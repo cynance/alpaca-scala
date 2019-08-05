@@ -19,6 +19,15 @@ import akka.http.scaladsl.model.ws.{
   WebSocketUpgradeResponse,
   Message => WSMessage
 }
+import alpaca.dto.streaming.Alpaca.{
+  AlpacaAccountUpdate,
+  AlpacaAckMessage,
+  AlpacaAuthorizationMessage,
+  AlpacaListenMessage,
+  AlpacaStreamMessage,
+  AlpacaTradeUpdate,
+  Stream
+}
 
 import scala.concurrent.Future
 
@@ -37,6 +46,16 @@ class StreamingService {
       case Ev.status => json.as[List[PolygonStreamAuthenticationMessage]]
     }
 
+  }
+
+  def decodeAlpacaMessage(json: Json, alpacaAckMessage: AlpacaAckMessage)
+    : Either[DecodingFailure, AlpacaStreamMessage] = {
+    alpacaAckMessage.stream match {
+      case Stream.account_updates => json.as[AlpacaAccountUpdate]
+      case Stream.trade_updates   => json.as[AlpacaTradeUpdate]
+      case Stream.listening       => json.as[AlpacaListenMessage]
+      case Stream.authorization   => json.as[AlpacaAuthorizationMessage]
+    }
   }
 
   def createClientSource(wsUrl: String, flow: Sink[WSMessage, Future[Done]])

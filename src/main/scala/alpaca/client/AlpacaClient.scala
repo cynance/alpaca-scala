@@ -82,13 +82,19 @@ private[alpaca] class AlpacaClient(configService: ConfigService,
   def getOrder(orderId: String): IO[Orders] = {
     hammockService.execute[Orders, Unit](
       Method.GET,
-      s"configService.getConfig.value.order_url/$orderId")
+      s"${configService.getConfig.value.order_url}/$orderId")
   }
 
   def cancelOrder(orderId: String): Unit = {
     hammockService.execute[String, Unit](
       Method.DELETE,
-      s"configService.getConfig.value.order_url/$orderId")
+      s"${configService.getConfig.value.order_url}/$orderId")
+  }
+
+  def cancelAllOrders = {
+    hammockService.execute[String, Unit](
+      Method.DELETE,
+      s"${configService.getConfig.value.order_url}")
   }
 
   def getOrders: IO[List[Orders]] = {
@@ -114,6 +120,18 @@ private[alpaca] class AlpacaClient(configService: ConfigService,
     hammockService.execute[Position, Unit](
       Method.GET,
       s"${configService.getConfig.value.positions_url}/$symbol")
+  }
+
+  def closePosition(symbol: String): IO[Orders] = {
+    hammockService.execute[Orders, Unit](
+      Method.DELETE,
+      s"${configService.getConfig.value.positions_url}/$symbol")
+  }
+
+  def closeAllPositions(): IO[Unit] = {
+    hammockService.execute[Unit, Unit](
+      Method.DELETE,
+      s"${configService.getConfig.value.positions_url}")
   }
 
 }

@@ -52,6 +52,10 @@ case class Alpaca(isPaper: Option[Boolean] = None,
     alpacaClient.cancelOrder(orderId)
   }
 
+  def cancelAllOrders(): Unit = {
+    alpacaClient.cancelAllOrders
+  }
+
   def getOrder(orderId: String): IO[Orders] = {
     alpacaClient.getOrder(orderId)
   }
@@ -66,6 +70,14 @@ case class Alpaca(isPaper: Option[Boolean] = None,
 
   def getPositions: IO[List[Position]] = {
     alpacaClient.getPositions
+  }
+
+  def closePosition(symbol: String): IO[Orders] = {
+    alpacaClient.closePosition(symbol)
+  }
+
+  def closeAllPositions: IO[Unit] = {
+    alpacaClient.closeAllPositions()
   }
 
   def getPosition(symbol: String): IO[Position] = {

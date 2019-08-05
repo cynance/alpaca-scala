@@ -33,3 +33,31 @@ alpaca.getPositions.unsafeToFuture().onComplete {
 	println(s"${value.size}")
 }
    ```
+
+### Close Positions of AAPL in Your Portfolio
+   
+   ```scala
+import alpaca.Alpaca
+
+val alpaca : Alpaca = Alpaca
+alpaca.closePosition("AAPL").unsafeToFuture().onComplete {
+  case Failure(exception) =>
+	println("Could not get position." + exception.getMessage)
+  case Success(value) =>
+	println(s"${value.size}")
+}
+   ```
+
+### Close All Positions  in Your Portfolio
+   
+   ```scala
+import alpaca.Alpaca
+
+val alpaca : Alpaca = Alpaca
+alpaca.closeAllPositions.unsafeToFuture().onComplete {
+  case Failure(exception) =>
+	println("Could not get position." + exception.getMessage)
+  case Success(value) =>
+	println(s"${value.size}")
+}
+   ```

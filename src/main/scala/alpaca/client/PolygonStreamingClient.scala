@@ -12,7 +12,11 @@ import akka.http.scaladsl.model.ws.{
 import akka.stream.scaladsl.{Flow, Sink, Source, SourceQueueWithComplete}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.{Done, NotUsed}
-import alpaca.dto.streaming.{StreamMessage, StreamingMessage}
+import alpaca.dto.streaming.{
+  ClientStreamMessage,
+  StreamMessage,
+  StreamingMessage
+}
 import alpaca.dto.streaming.Polygon._
 import alpaca.dto.streaming.request.{
   AuthenticationRequest,
@@ -39,6 +43,9 @@ class PolygonStreamingClient(configService: ConfigService,
     extends BaseStreamingClient {
 
   val logger = Logger(classOf[PolygonStreamingClient])
+
+  val messageList =
+    scala.collection.mutable.ListBuffer.empty[PolygonClientStreamMessage]
 
   val incoming: Sink[WSMessage, Future[Done]] =
     Sink.foreach[WSMessage] {

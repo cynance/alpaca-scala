@@ -20,8 +20,6 @@ trait BaseStreamingClient {
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   val authPromise: Promise[Boolean] = Promise[Boolean]()
-  val messageList =
-    scala.collection.mutable.ListBuffer.empty[ClientStreamMessage]
 
   def wsUrl: String = {
     "wss://alpaca.socket.polygon.io/stocks"

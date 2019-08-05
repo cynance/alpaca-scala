@@ -1,27 +1,24 @@
 name := "alpaca-scala"
 
-version := "2.0.0"
+version := "3.0.0"
 
 // POM settings for Sonatype
+import xerial.sbt.Sonatype._
 organization := "com.cynance"
 homepage := Some(url("https://github.com/cynance/alpaca-scala"))
+sonatypeProjectHosting := Some(GitHubHosting("cynance", "alpaca-scala", "devs@cynance.com"))
 scmInfo := Some(ScmInfo(url("https://github.com/cynance/alpaca-scala"),"git@github.com:cynance/alpaca-scala.git"))
-developers := List(Developer("OUEasley",
-  "OUEasley",
-  "oueasley@gmail.com",
-  url("https://github.com/OUEasley")))
+developers := List(Developer("cynance",
+  "cynance",
+  "devs@cynance.com",
+  url("https://github.com/cynance")))
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 publishMavenStyle := true
 
 enablePlugins(MicrositesPlugin)
 
 // Add sonatype repository settings
-publishTo := Some(
-  if (isSnapshot.value)
-    Opts.resolver.sonatypeSnapshots
-  else
-    Opts.resolver.sonatypeStaging
-)
+publishTo := sonatypePublishTo.value
 
 scalaVersion := "2.12.8"
 
@@ -76,7 +73,7 @@ coverageEnabled := true
 //Microsite details
 micrositeName := "Alpaca Scala"
 micrositeDescription := "A Scala library for alpaca.markets"
-micrositeAuthor := "OUEasley"
+micrositeAuthor := "Cynance"
 micrositeBaseUrl := "/alpaca-scala"
 micrositeDocumentationUrl := "/alpaca-scala/docs"
 
